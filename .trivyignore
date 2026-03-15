@@ -1,0 +1,5 @@
+# AWS-0011: CloudFront WAF — unnecessary for a static resume site, adds cost
+AVD-AWS-0011
+
+# AWS-0132: S3 CMK encryption — bucket serves public website content, SSE-S3 is sufficient
+AVD-AWS-0132

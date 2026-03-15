@@ -244,7 +244,7 @@ jobs:
 
       - name: Run zizmor
         id: zizmor
-        run: zizmor .github/workflows/
+        run: zizmor --config zizmor.yml .github/workflows/
 
       - name: Post summary
         if: always()
