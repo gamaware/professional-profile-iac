@@ -9,12 +9,6 @@ terraform {
 
 # ─── S3 Bucket ────────────────────────────────────────────────────────────────
 
-data "aws_s3_bucket" "this" {
-  bucket = var.domain_name
-}
-
-# Import the existing bucket rather than creating a new one
-# Use `terraform import module.static_site.aws_s3_bucket.this alexgarcia.info`
 resource "aws_s3_bucket" "this" {
   bucket = var.domain_name
 }
@@ -32,15 +26,15 @@ resource "aws_s3_bucket_website_configuration" "this" {
   bucket = aws_s3_bucket.this.id
 
   index_document {
-    suffix = "index.html"
+    suffix = var.index_document
   }
 
   error_document {
-    key = "error.html"
+    key = var.error_document
   }
 }
 
-# ─── CloudFront OAC ──────────────────────────────────────────────────────────
+# ─── CloudFront Origin Access Control ────────────────────────────────────────
 
 resource "aws_cloudfront_origin_access_control" "this" {
   name                              = "${var.domain_name}-oac"
@@ -49,7 +43,7 @@ resource "aws_cloudfront_origin_access_control" "this" {
   signing_protocol                  = "sigv4"
 }
 
-# ─── ACM Certificate ─────────────────────────────────────────────────────────
+# ─── ACM Certificate (data source — managed outside this module) ─────────────
 
 data "aws_acm_certificate" "this" {
   provider = aws.us_east_1
@@ -58,12 +52,6 @@ data "aws_acm_certificate" "this" {
 }
 
 # ─── CloudFront Distribution ─────────────────────────────────────────────────
-
-data "aws_cloudfront_distribution" "existing" {
-  # TODO: Replace with your existing distribution ID after import
-  # Use `terraform import module.static_site.aws_cloudfront_distribution.this <DISTRIBUTION_ID>`
-  id = "PLACEHOLDER"
-}
 
 resource "aws_cloudfront_distribution" "this" {
   origin {
@@ -74,7 +62,8 @@ resource "aws_cloudfront_distribution" "this" {
 
   enabled             = true
   is_ipv6_enabled     = true
-  default_root_object = "index.html"
+  http_version        = "http2and3"
+  default_root_object = var.index_document
   aliases             = [var.domain_name]
 
   default_cache_behavior {
@@ -90,16 +79,22 @@ resource "aws_cloudfront_distribution" "this" {
     }
 
     viewer_protocol_policy = "redirect-to-https"
+    compress               = true
     min_ttl                = 0
     default_ttl            = 3600
     max_ttl                = 86400
-    compress               = true
+  }
+
+  custom_error_response {
+    error_code         = 403
+    response_code      = 404
+    response_page_path = "/${var.error_document}"
   }
 
   custom_error_response {
     error_code         = 404
     response_code      = 404
-    response_page_path = "/error.html"
+    response_page_path = "/${var.error_document}"
   }
 
   restrictions {
@@ -115,10 +110,11 @@ resource "aws_cloudfront_distribution" "this" {
   }
 }
 
-# ─── S3 Bucket Policy (CloudFront access) ────────────────────────────────────
+# ─── S3 Bucket Policy (CloudFront OAC access only) ──────────────────────────
 
 resource "aws_s3_bucket_policy" "this" {
-  bucket = aws_s3_bucket.this.id
+  bucket     = aws_s3_bucket.this.id
+  depends_on = [aws_s3_bucket_public_access_block.this]
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -139,4 +135,22 @@ resource "aws_s3_bucket_policy" "this" {
       }
     ]
   })
+}
+
+# ─── Route 53 DNS Record ─────────────────────────────────────────────────────
+
+data "aws_route53_zone" "this" {
+  name = var.domain_name
+}
+
+resource "aws_route53_record" "this" {
+  zone_id = data.aws_route53_zone.this.zone_id
+  name    = var.domain_name
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.this.domain_name
+    zone_id                = aws_cloudfront_distribution.this.hosted_zone_id
+    evaluate_target_health = false
+  }
 }
