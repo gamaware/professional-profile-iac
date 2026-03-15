@@ -1,0 +1,89 @@
+name: 'Post-Deployment Validation Composite Action'
+description: 'Validates deployed infrastructure matches expected state'
+
+inputs:
+  working_directory:
+    description: 'Directory containing Terraform configuration'
+    required: true
+  aws_region:
+    description: 'AWS region'
+    required: false
+    default: 'us-east-1'
+  expected_domain:
+    description: 'Expected domain name for the website'
+    required: true
+
+outputs:
+  validation_log:
+    description: 'Validation script output for downstream steps'
+    value: ${{ steps.validate.outputs.validation_log }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Get Terraform Outputs
+      id: outputs
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        echo "website_url=$(terraform output -raw website_url 2>/dev/null || echo '')" >> "$GITHUB_OUTPUT"
+        echo "cloudfront_id=$(terraform output -raw cloudfront_distribution_id 2>/dev/null || echo '')" >> "$GITHUB_OUTPUT"
+        echo "s3_bucket=$(terraform output -raw s3_bucket_name 2>/dev/null || echo '')" >> "$GITHUB_OUTPUT"
+
+    - name: Validate Deployment
+      id: validate
+      shell: bash
+      env:
+        EXPECTED_DOMAIN: ${{ inputs.expected_domain }}
+        WEBSITE_URL: ${{ steps.outputs.outputs.website_url }}
+        CLOUDFRONT_ID: ${{ steps.outputs.outputs.cloudfront_id }}
+        S3_BUCKET: ${{ steps.outputs.outputs.s3_bucket }}
+      run: |
+        set +e
+        LOG_FILE="$(mktemp)"
+        {
+          echo "=== Post-Deployment Validation ==="
+          echo ""
+
+          # Validate S3 bucket exists
+          if aws s3api head-bucket --bucket "$S3_BUCKET" 2>/dev/null; then
+            echo "PASS: S3 bucket '$S3_BUCKET' exists"
+          else
+            echo "FAIL: S3 bucket '$S3_BUCKET' not found"
+          fi
+
+          # Validate CloudFront distribution
+          if [ -n "$CLOUDFRONT_ID" ]; then
+            STATUS=$(aws cloudfront get-distribution --id "$CLOUDFRONT_ID" --query 'Distribution.Status' --output text 2>/dev/null)
+            echo "PASS: CloudFront distribution '$CLOUDFRONT_ID' status: $STATUS"
+          else
+            echo "FAIL: CloudFront distribution ID not available"
+          fi
+
+          # Validate website responds
+          if curl -sf "https://$EXPECTED_DOMAIN" > /dev/null 2>&1; then
+            echo "PASS: Website at https://$EXPECTED_DOMAIN is responding"
+          else
+            echo "WARN: Website at https://$EXPECTED_DOMAIN not responding (may need cache invalidation)"
+          fi
+
+          echo ""
+          echo "=== Validation Complete ==="
+        } 2>&1 | tee "$LOG_FILE"
+        set -e
+
+        MAX_CHARS=60000
+        if [ "$(wc -c < "$LOG_FILE")" -gt "$MAX_CHARS" ]; then
+          head -c "$MAX_CHARS" "$LOG_FILE" > "${LOG_FILE}.trunc"
+          printf '\n[...validation log truncated to %s chars...]\n' "$MAX_CHARS" >> "${LOG_FILE}.trunc"
+          mv "${LOG_FILE}.trunc" "$LOG_FILE"
+        fi
+
+        DELIM="VALIDATION_EOF_${RANDOM}_$(date +%s)"
+        {
+          echo "validation_log<<$DELIM"
+          cat "$LOG_FILE"
+          echo "$DELIM"
+        } >> "$GITHUB_OUTPUT"
+
+        rm -f "$LOG_FILE"

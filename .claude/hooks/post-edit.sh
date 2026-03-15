@@ -1,5 +1,5 @@
-#!/bin/bash
-# Post-edit hook: auto-fix markdown and terraform files after edits
+#!/usr/bin/env bash
+# Post-edit hook: auto-fix shell scripts, markdown, and terraform files after edits
 set -euo pipefail
 
 if ! command -v jq >/dev/null 2>&1; then
@@ -11,6 +11,12 @@ FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null) 
 
 if [[ -z "$FILE_PATH" || ! -f "$FILE_PATH" ]]; then
   exit 0
+fi
+
+# Auto-fix shell scripts with shellharden and restore executable permissions
+if [[ "$FILE_PATH" =~ \.sh$ ]]; then
+  shellharden --replace "$FILE_PATH" 2>/dev/null || true
+  chmod +x "$FILE_PATH"
 fi
 
 # Auto-fix markdown with markdownlint

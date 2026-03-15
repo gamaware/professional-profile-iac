@@ -1,52 +1,81 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-json
       - id: check-added-large-files
-        args: ["--maxkb=1024"]
+        args: ['--maxkb=1024']
       - id: check-merge-conflict
       - id: detect-private-key
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
       - id: check-symlinks
       - id: check-case-conflict
       - id: no-commit-to-branch
-        args: ["--branch", "main"]
+        args: ['--branch', 'main']
 
-  # Secrets
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.5.0
     hooks:
       - id: detect-secrets
-        args: ["--baseline", ".secrets.baseline"]
+        args: ['--baseline', '.secrets.baseline']
 
   - repo: local
     hooks:
       - id: gitleaks
         name: gitleaks
-        entry: gitleaks git --pre-commit --no-banner
+        entry: gitleaks git --pre-commit --redact --no-banner
         language: system
         pass_filenames: false
 
-  # Terraform
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.97.0
+    rev: v1.105.0
     hooks:
       - id: terraform_fmt
       - id: terraform_validate
       - id: terraform_tflint
       - id: terraform_docs
+      - id: terrascan
+        args:
+          - --args=--non-recursive
+          - --args=--policy-type=aws
+          - --args=--iac-version=v15
+      - id: terraform_checkov
+        args:
+          - --args=--quiet
+          - --args=--framework=terraform
 
-  # Markdown
+  - repo: local
+    hooks:
+      - id: shellcheck
+        name: shellcheck
+        entry: shellcheck --severity=warning
+        language: system
+        types: [shell]
+      - id: shellharden
+        name: shellharden
+        entry: shellharden --check
+        language: system
+        types: [shell]
+
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.47.0
+    rev: v0.48.0
     hooks:
       - id: markdownlint
-        args: ["--fix"]
+        args: ['--fix']
 
-  # GitHub Actions
+  - repo: local
+    hooks:
+      - id: vale
+        name: vale
+        entry: bash -c 'vale sync --no-progress 2>/dev/null; vale "$@"' --
+        language: system
+        types: [markdown]
+        exclude: ^modules/.*/README\.md$
+
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.11
     hooks:
@@ -56,12 +85,11 @@ repos:
     hooks:
       - id: zizmor
         name: zizmor
-        entry: zizmor --config zizmor.yml
+        entry: zizmor --config zizmor.yml .github/workflows/
         language: system
-        files: \.github/workflows/
-        types: [yaml]
+        files: ^\.github/workflows/.*\.ya?ml$
+        pass_filenames: false
 
-  # Commits
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.4.0
     hooks:

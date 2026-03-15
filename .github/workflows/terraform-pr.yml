@@ -1,0 +1,58 @@
+name: Terraform PR Checks
+run-name: >-
+  Terraform PR checks (PR #${{ github.event.pull_request.number }})
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '*.tf'
+      - 'modules/**'
+      - '.github/workflows/terraform-pr.yml'
+      - '.github/actions/lint-and-security-composite/**'
+      - '.github/actions/terraform-composite/**'
+
+concurrency:
+  group: terraform-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-security:
+    name: Lint and Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Run Lint and Security
+        uses: ./.github/actions/lint-and-security-composite
+        with:
+          working_directory: .
+
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: lint-and-security
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Run Terraform Plan
+        uses: ./.github/actions/terraform-composite
+        with:
+          terraform_command: plan
+          working_directory: .
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          aws_region: ${{ vars.TF_VAR_aws_region }}

@@ -1,0 +1,29 @@
+name: Update Pre-commit Hooks
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+concurrency:
+  group: pre-commit-update
+  cancel-in-progress: false
+
+jobs:
+  update-hooks:
+    name: Update Pre-commit Hooks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Update Hooks
+        uses: ./.github/actions/update-pre-commit-composite
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

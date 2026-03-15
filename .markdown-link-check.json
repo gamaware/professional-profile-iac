@@ -1,0 +1,7 @@
+{
+  "ignorePatterns": [
+    { "pattern": "^https://github.com/gamaware" }
+  ],
+  "timeout": "10s",
+  "retryOn429": true
+}

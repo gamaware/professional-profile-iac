@@ -1,0 +1,106 @@
+name: Terraform CI/CD
+run-name: >-
+  ${{ github.event_name == 'workflow_dispatch'
+    && format('Terraform {0}', inputs.action)
+    || format('Terraform plan + apply (push: {0})', github.event.head_commit.message) }}
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '*.tf'
+      - 'modules/**'
+      - '.github/workflows/terraform-cicd.yml'
+      - '.github/actions/terraform-composite/**'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        type: choice
+        options:
+          - apply
+          - destroy
+        default: apply
+
+concurrency:
+  group: terraform-state
+  cancel-in-progress: false
+
+jobs:
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.action == 'apply')
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Run Terraform Plan
+        uses: ./.github/actions/terraform-composite
+        with:
+          terraform_command: plan
+          working_directory: .
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          aws_region: ${{ vars.TF_VAR_aws_region }}
+
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: terraform-plan
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Run Terraform Apply
+        uses: ./.github/actions/terraform-composite
+        with:
+          terraform_command: apply
+          working_directory: .
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          aws_region: ${{ vars.TF_VAR_aws_region }}
+
+      - name: Post-Deployment Validation
+        id: validation
+        uses: ./.github/actions/post-deploy-validation-composite
+        with:
+          working_directory: .
+          aws_region: ${{ vars.TF_VAR_aws_region }}
+          expected_domain: alexgarcia.info
+
+  terraform-destroy:
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'workflow_dispatch' && inputs.action == 'destroy'
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Run Terraform Destroy
+        uses: ./.github/actions/terraform-composite
+        with:
+          terraform_command: destroy
+          working_directory: .
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          aws_region: ${{ vars.TF_VAR_aws_region }}

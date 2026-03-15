@@ -1,0 +1,94 @@
+name: 'Drift Detection Composite Action'
+description: 'Detects configuration drift and creates GitHub issues'
+
+inputs:
+  terraform_version:
+    description: 'Terraform version to use'
+    required: false
+    default: '1.14.5'
+  working_directory:
+    description: 'Directory containing Terraform configuration'
+    required: true
+  aws_region:
+    description: 'AWS region'
+    required: false
+    default: 'us-east-1'
+  aws_role_arn:
+    description: 'AWS IAM role ARN for OIDC authentication'
+    required: true
+  github_token:
+    description: 'GitHub token for creating issues'
+    required: true
+
+outputs:
+  has_drift:
+    description: 'Whether drift was detected'
+    value: ${{ steps.check-drift.outputs.has_drift }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ inputs.aws_role_arn }}
+        aws-region: ${{ inputs.aws_region }}
+        role-session-name: GitHubActions-DriftDetection-${{ github.run_id }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ inputs.terraform_version }}
+
+    - name: Terraform Init
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: terraform init
+
+    - name: Terraform Plan (Drift Check)
+      id: plan
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        set +e
+        terraform plan -detailed-exitcode -no-color 2>&1 | tee drift-plan.txt
+        echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+        set -e
+
+    - name: Check for Drift
+      id: check-drift
+      shell: bash
+      run: |
+        if [ "${{ steps.plan.outputs.exit_code }}" = "2" ]; then
+          echo "has_drift=true" >> "$GITHUB_OUTPUT"
+          echo "Configuration drift detected!"
+        else
+          echo "has_drift=false" >> "$GITHUB_OUTPUT"
+          echo "No drift detected."
+        fi
+
+    - name: Create or Update Drift Issue
+      if: steps.check-drift.outputs.has_drift == 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        WORKING_DIRECTORY: ${{ inputs.working_directory }}
+      run: |
+        TITLE="Infrastructure drift detected"
+        EXISTING=$(gh issue list --label "drift" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+        BODY="## Infrastructure Drift Detected
+
+        Terraform plan detected changes that were not made through code.
+
+        **Working directory:** \`$WORKING_DIRECTORY\`
+        **Detected at:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+        **Run:** [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+        Review the plan output in the workflow run and reconcile the drift."
+
+        if [ -n "$EXISTING" ]; then
+          gh issue comment "$EXISTING" --body "$BODY"
+        else
+          gh issue create --title "$TITLE" --body "$BODY" --label "drift"
+        fi
