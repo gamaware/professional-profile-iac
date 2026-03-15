@@ -35,3 +35,6 @@ styles/
 # Logs
 *.log
 logs/
+
+# Local variable overrides
+terraform.tfvars
