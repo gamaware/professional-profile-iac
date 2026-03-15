@@ -1,0 +1,22 @@
+language: en-US
+reviews:
+  auto_review:
+    enabled: true
+    drafts: false
+  path_instructions:
+    - path: "**/*.tf"
+      instructions: >
+        Review for Terraform best practices, proper variable usage,
+        no hardcoded values, and security considerations.
+    - path: ".github/workflows/**"
+      instructions: >
+        Review for GitHub Actions security best practices, pinned action
+        versions, and least-privilege permissions.
+    - path: "modules/**"
+      instructions: >
+        Review for module reusability, proper input/output definitions,
+        and documentation completeness.
+  path_filters:
+    - "!.terraform.lock.hcl"
+chat:
+  auto_reply: true

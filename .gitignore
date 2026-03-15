@@ -1,0 +1,38 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform.lock.hcl
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Kiro CLI
+*.conversation
+
+# Environment variables
+.env
+.env.local
+
+# Credentials and certificates
+*.pem
+*.key
+credentials.json
+
+# Vale
+styles/
+
+# Logs
+*.log
+logs/

@@ -1,0 +1,81 @@
+name: Quality Checks
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  terraform-fmt:
+    name: Terraform Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@v3
+      - name: Check formatting
+        run: terraform fmt -check -recursive
+
+  terraform-validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@v3
+      - name: Init and validate
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+  markdown-lint:
+    name: Markdown Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: DavidAnson/markdownlint-cli2-action@v22
+
+  yaml-lint:
+    name: YAML Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ibiqlik/action-yamllint@v3
+
+  file-structure:
+    name: Validate Repository Structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Check required files
+        run: |
+          missing=0
+          for f in LICENSE CODEOWNERS .gitignore CLAUDE.md README.md; do
+            if [ ! -f "$f" ]; then
+              echo "Missing required file: $f"
+              missing=1
+            fi
+          done
+          exit $missing
+
+  actions-security:
+    name: Actions Security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Run zizmor
+        run: |
+          pip install zizmor
+          zizmor --config zizmor.yml .github/workflows/
