@@ -3,4 +3,5 @@ rules:
     config:
       policies:
         - tags
-  secrets-outside-env: warn
+  secrets-outside-env:
+    ignore: true

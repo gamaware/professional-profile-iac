@@ -7,3 +7,7 @@ terraform {
     use_lockfile = true
   }
 }
+
+# NOTE: For local development, init with:
+#   terraform init -backend-config="profile=personal"
+# CI uses OIDC credentials via environment variables.
