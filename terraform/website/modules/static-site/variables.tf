@@ -6,7 +6,7 @@ variable "domain_name" {
 variable "index_document" {
   description = "Index document for S3 website hosting"
   type        = string
-  default     = "detailed-resume.html"
+  default     = "index.html"
 }
 
 variable "error_document" {
