@@ -38,3 +38,4 @@ logs/
 
 # Local variable overrides
 terraform.tfvars
+modules/**/.terraform.lock.hcl
