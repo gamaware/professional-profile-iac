@@ -158,8 +158,11 @@ Security checks at every stage of the development lifecycle:
 | Resource | Link |
 | --- | --- |
 | Architecture | [docs/architecture.md](docs/architecture.md) |
+| CI/CD Pipeline Flow | [docs/cicd-flow.md](docs/cicd-flow.md) |
 | ADRs | [docs/adr/](docs/adr/README.md) |
 | OIDC Setup | [docs/github-oidc-setup.md](docs/github-oidc-setup.md) |
+| GitHub Variables | [docs/github-variables-setup.md](docs/github-variables-setup.md) |
+| Infracost Setup | [docs/infracost-setup.md](docs/infracost-setup.md) |
 | Prerequisites | [docs/prerequisites.md](docs/prerequisites.md) |
 | Site Repo | [professional-profile-site](https://github.com/gamaware/professional-profile-site) |
 
