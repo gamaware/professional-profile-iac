@@ -21,6 +21,7 @@ One-time setup required before deploying. Follow these guides in order:
 - [shellcheck](https://www.shellcheck.net/) and
   [shellharden](https://github.com/anordal/shellharden)
 - [Vale](https://vale.sh/) and [gitleaks](https://github.com/gitleaks/gitleaks)
+- [GitHub CLI](https://cli.github.com/) (`gh`)
 - AWS CLI v2 with SSO profile `personal`
 
 ### Setup
@@ -33,8 +34,12 @@ aws sso login --profile personal
 pre-commit install
 vale sync
 
-# Initialize Terraform
+# Create terraform.tfvars from example
 cd terraform/website
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars: set aws_profile = "personal"
+
+# Initialize Terraform
 terraform init -backend-config="profile=personal"
 
 # Verify

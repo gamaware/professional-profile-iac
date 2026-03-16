@@ -173,13 +173,14 @@ sequenceDiagram
   (plan, apply, destroy, drift detection all share this group)
 - **`terraform-pr-{number}`** group: Cancels previous PR check runs
   when new commits are pushed
-- **`security-{ref}`** group: Cancels previous security scans
+- **`security-{PR# || ref}`** group: Cancels previous security scans
+  (keyed by PR number for PRs, by ref for pushes)
 - **`pre-commit-update`** group: Prevents concurrent hook updates
 - **`deploy`** group (site repo): Prevents concurrent deploys
 
 ## Pre-commit Hooks (Local)
 
-Before any commit, 25 hooks validate the code locally:
+Before any commit, hooks validate the code locally:
 
 | Category | Hooks |
 | --- | --- |
