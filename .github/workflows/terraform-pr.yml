@@ -56,3 +56,33 @@ jobs:
           working_directory: terraform/website
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           aws_region: ${{ vars.TF_VAR_aws_region }}
+
+  infracost:
+    name: Infracost Cost Estimate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Infracost
+        uses: infracost/actions/setup@v3
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      - name: Generate cost breakdown
+        run: |
+          infracost breakdown --path=terraform/website \
+            --format=json \
+            --out-file=/tmp/infracost.json
+
+      - name: Post cost comment
+        uses: infracost/actions/comment@v3
+        with:
+          path: /tmp/infracost.json
+          behavior: update
