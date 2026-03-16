@@ -5,34 +5,12 @@
 The professional profile website at `alexgarcia.info` runs on a fully
 managed AWS static site stack:
 
-```text
-                    +------------------+
-                    |   Route 53       |
-                    |  alexgarcia.info |
-                    +--------+---------+
-                             |
-                             | A Record (alias)
-                             v
-                    +------------------+
-                    |   CloudFront     |
-                    |  <DISTRIBUTION_ID>  |
-                    |  HTTPS + HTTP/3  |
-                    |  OAC Auth        |
-                    +--------+---------+
-                             |
-                             | Origin Access Control
-                             v
-                    +------------------+
-                    |   S3 Bucket      |
-                    |  alexgarcia.info |
-                    |  Private         |
-                    +------------------+
-
-                    +------------------+
-                    |   ACM            |
-                    |  SSL Certificate |
-                    |  (us-east-1)     |
-                    +------------------+
+```mermaid
+flowchart LR
+    User([Visitor]) -->|HTTPS| R53[Route 53<br/>alexgarcia.info]
+    R53 --> CF[CloudFront<br/>HTTPS + HTTP/3<br/>OAC]
+    CF -->|Origin Access<br/>Control| S3[S3 Bucket<br/>alexgarcia.info<br/>Private]
+    ACM[ACM<br/>SSL Certificate] -.->|TLS 1.2| CF
 ```
 
 ## Security Architecture
@@ -46,38 +24,40 @@ Traffic flows through multiple security layers:
 
 ## CI/CD Pipeline
 
-```text
-Developer
-    |
-    v
-Feature Branch --> PR Created
-    |
-    +-- Quality Checks (8 jobs)
-    +-- Security Scanning (Semgrep + Trivy)
-    +-- Terraform Lint + Security (TFLint + Checkov)
-    +-- Terraform Plan (OIDC, posted as PR comment)
-    +-- Infracost (cost estimation)
-    +-- CodeRabbit Review
-    +-- Copilot Review
-    |
-    v
-Squash Merge to main
-    |
-    +-- Terraform Plan
-    +-- Production Approval Gate (manual)
-    +-- Terraform Apply
-    +-- Post-Deployment Validation
-        +-- S3 bucket exists
-        +-- CloudFront deployed
-        +-- Website responds (HTTPS)
-        +-- HTTP redirects to HTTPS
+```mermaid
+flowchart TB
+    Dev([Developer]) --> Branch[Feature Branch]
+    Branch --> PR[Pull Request]
+
+    subgraph PR_Checks[PR Checks]
+        Lint[TFLint + Checkov]
+        Security[Semgrep + Trivy]
+        Plan[Terraform Plan]
+        Cost[Infracost]
+        CR[CodeRabbit]
+        Copilot[Copilot]
+    end
+
+    PR --> PR_Checks
+
+    subgraph Deploy[Merge to Main]
+        TFPlan[Terraform Plan] --> Gate{Production<br/>Approval}
+        Gate --> Apply[Terraform Apply]
+        Apply --> Validate[Post-Deploy<br/>Validation]
+    end
+
+    PR_Checks --> Merge[Squash Merge]
+    Merge --> Deploy
 ```
 
 ## Drift Detection
 
-Daily at 9 AM UTC, a scheduled workflow runs `terraform plan` against
-live infrastructure. If drift is detected, a GitHub issue is created
-automatically.
+```mermaid
+flowchart LR
+    Cron([Daily 9 AM UTC]) --> Plan[Terraform Plan]
+    Plan -->|No Changes| OK([No Drift])
+    Plan -->|Changes Found| Issue[Create GitHub Issue]
+```
 
 ## Authentication
 
@@ -90,7 +70,7 @@ GitHub Actions authenticates to AWS via OIDC (OpenID Connect):
 
 ## Terraform State
 
-- **Bucket**: `terraform-state-professional-profile-<account-id>`
+- **Bucket**: `terraform-state-professional-profile-<ACCOUNT_ID>`
 - **Encryption**: AES-256 at rest
 - **Versioning**: Enabled for state recovery
 - **Locking**: Native S3 lockfile

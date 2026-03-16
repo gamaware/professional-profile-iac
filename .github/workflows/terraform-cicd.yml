@@ -2,14 +2,13 @@ name: Terraform CI/CD
 run-name: >-
   ${{ github.event_name == 'workflow_dispatch'
     && format('Terraform {0}', inputs.action)
-    || format('Terraform plan + apply (push: {0})', github.event.head_commit.message) }}
+    || format('Terraform plan → apply (push: {0})', github.event.head_commit.message) }}
 
 on:
   push:
     branches: [main]
     paths:
-      - '*.tf'
-      - 'modules/**'
+      - 'terraform/**'
       - '.github/workflows/terraform-cicd.yml'
       - '.github/actions/terraform-composite/**'
       - '.github/scripts/**'
@@ -48,7 +47,7 @@ jobs:
         uses: ./.github/actions/terraform-composite
         with:
           terraform_command: plan
-          working_directory: .
+          working_directory: terraform/website
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           aws_region: ${{ vars.TF_VAR_aws_region }}
 
@@ -71,7 +70,7 @@ jobs:
         uses: ./.github/actions/terraform-composite
         with:
           terraform_command: apply
-          working_directory: .
+          working_directory: terraform/website
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           aws_region: ${{ vars.TF_VAR_aws_region }}
 
@@ -79,7 +78,7 @@ jobs:
         id: validation
         uses: ./.github/actions/post-deploy-validation-composite
         with:
-          working_directory: .
+          working_directory: terraform/website
           aws_region: ${{ vars.TF_VAR_aws_region }}
           expected_domain: alexgarcia.info
 
@@ -102,7 +101,7 @@ jobs:
         uses: ./.github/actions/terraform-composite
         with:
           terraform_command: destroy
-          working_directory: .
+          working_directory: terraform/website
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           aws_region: ${{ vars.TF_VAR_aws_region }}
 

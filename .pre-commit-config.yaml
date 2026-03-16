@@ -36,7 +36,7 @@ repos:
     hooks:
       - id: terraform_fmt
       - id: terraform_validate
-        exclude: ^modules/
+        exclude: ^terraform/website/modules/
       - id: terraform_tflint
       - id: terraform_docs
       - id: terraform_trivy
@@ -72,7 +72,7 @@ repos:
         entry: bash -c 'vale sync --no-progress 2>/dev/null; vale "$@"' --
         language: system
         types: [markdown]
-        exclude: ^modules/.*/README\.md$
+        exclude: ^terraform/website/modules/.*/README\.md$
 
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.11
