@@ -25,10 +25,7 @@ runs:
       id: outputs
       shell: bash
       working-directory: ${{ inputs.working_directory }}
-      run: |
-        echo "website_url=$(terraform output -raw website_url 2>/dev/null || echo '')" >> "$GITHUB_OUTPUT"
-        echo "cloudfront_id=$(terraform output -raw cloudfront_distribution_id 2>/dev/null || echo '')" >> "$GITHUB_OUTPUT"
-        echo "s3_bucket=$(terraform output -raw s3_bucket_name 2>/dev/null || echo '')" >> "$GITHUB_OUTPUT"
+      run: ${{ github.workspace }}/.github/scripts/get-terraform-outputs.sh
 
     - name: Validate Deployment
       id: validate
@@ -41,35 +38,8 @@ runs:
       run: |
         set +e
         LOG_FILE="$(mktemp)"
-        {
-          echo "=== Post-Deployment Validation ==="
-          echo ""
-
-          # Validate S3 bucket exists
-          if aws s3api head-bucket --bucket "$S3_BUCKET" 2>/dev/null; then
-            echo "PASS: S3 bucket '$S3_BUCKET' exists"
-          else
-            echo "FAIL: S3 bucket '$S3_BUCKET' not found"
-          fi
-
-          # Validate CloudFront distribution
-          if [ -n "$CLOUDFRONT_ID" ]; then
-            STATUS=$(aws cloudfront get-distribution --id "$CLOUDFRONT_ID" --query 'Distribution.Status' --output text 2>/dev/null)
-            echo "PASS: CloudFront distribution '$CLOUDFRONT_ID' status: $STATUS"
-          else
-            echo "FAIL: CloudFront distribution ID not available"
-          fi
-
-          # Validate website responds
-          if curl -sf "https://$EXPECTED_DOMAIN" > /dev/null 2>&1; then
-            echo "PASS: Website at https://$EXPECTED_DOMAIN is responding"
-          else
-            echo "WARN: Website at https://$EXPECTED_DOMAIN not responding (may need cache invalidation)"
-          fi
-
-          echo ""
-          echo "=== Validation Complete ==="
-        } 2>&1 | tee "$LOG_FILE"
+        ${{ github.workspace }}/.github/scripts/validate-deployment.sh 2>&1 | tee "$LOG_FILE" >&2
+        VALIDATE_EXIT="${PIPESTATUS[0]}"
         set -e
 
         MAX_CHARS=60000
@@ -87,3 +57,4 @@ runs:
         } >> "$GITHUB_OUTPUT"
 
         rm -f "$LOG_FILE"
+        exit "$VALIDATE_EXIT"

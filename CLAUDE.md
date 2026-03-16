@@ -28,8 +28,9 @@ docs/
   hooks/                # Automation hooks (post-edit, protect-generated)
   skills/               # Reusable skills (/ship for PR lifecycle)
 .github/
-  actions/              # Composite actions (terraform, lint, drift, validation)
-  workflows/            # CI/CD pipelines
+  actions/              # Composite actions (terraform, lint, drift, validation, update)
+  scripts/              # Shell scripts (plan, drift, validation, destroy)
+  workflows/            # CI/CD pipelines (6 workflows)
   ISSUE_TEMPLATE/       # Issue templates
   PULL_REQUEST_TEMPLATE.md
   copilot-instructions.md  # Copilot code review custom instructions
@@ -114,6 +115,15 @@ Hooks in `.claude/settings.json` automate deterministic actions:
 
 - All default linting rules are enforced. Fix violations, never suppress them.
 - Markdownlint config: MD013 line length at 120 characters, tables exempt.
+  That is the ONLY customization in `.markdownlint.yaml`.
+- `.markdownlintignore` excludes only auto-generated `modules/*/README.md`.
+
+### Allowed exclusions
+
+- Checkov skips in `.checkov.yml`: WAF, logging, CMK encryption, versioning,
+  and other findings that are not applicable to a personal static website.
+- Trivy skips in `.trivyignore`: Same rationale as Checkov.
+- These are the ONLY acceptable exclusions. Do not add more without explicit approval.
 
 ## Shell Scripts
 
@@ -172,6 +182,27 @@ Monitors GitHub Actions and Terraform provider dependencies weekly.
 - **GitHub Copilot** — Auto-reviews via ruleset. Custom instructions in
   `.github/copilot-instructions.md`.
 - Both reviewers run on every PR. Address comments from both before merging.
+- Reviewers may comment on issues already fixed in subsequent commits.
+  Verify current file state before acting — stale comments can be dismissed.
+
+## GitHub Actions Security
+
+- All `actions/checkout` steps must include `persist-credentials: false`.
+- Action references use tag pins (e.g., `@v6`); configured via `zizmor.yml`.
+- zizmor runs in CI and as a pre-commit hook to catch security issues in workflows.
+
+## Architecture Decision Records
+
+ADRs are in `docs/adr/` using dateless format. When making significant
+architectural decisions, create a new ADR following the existing pattern
+(Status, Context, Decision, Consequences).
+
+## Content Rules
+
+- **Dateless** — No semester names, specific dates, or time-bound links.
+- **English only** — All content, code comments, and output in English.
+- **Placeholders** — Never hardcode AWS account IDs, credentials, or org IDs.
+- **Cross-references** — Directory paths must match actual directory names.
 
 ## Security
 

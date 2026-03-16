@@ -2,6 +2,12 @@
 
 Thank you for your interest in improving this project.
 
+## Who Can Contribute
+
+- Infrastructure engineers who spot issues in Terraform code or CI/CD pipelines
+- Security professionals who identify misconfigurations
+- Anyone who finds a bug in a script or workflow
+
 ## How to Report an Issue
 
 Open a [GitHub Issue](../../issues) describing:
@@ -20,7 +26,7 @@ Open a [GitHub Issue](../../issues) describing:
 
 ## Code Guidelines
 
-- Terraform must pass `terraform fmt`, `terraform validate`, TFLint, and Checkov
+- Terraform must pass `terraform fmt`, `terraform validate`, TFLint, Checkov, and Trivy
 - Shell scripts must pass ShellCheck and shellharden
 - Markdown must pass markdownlint (config in `.markdownlint.yaml`)
 - Commits must follow [Conventional Commits](https://www.conventionalcommits.org/)

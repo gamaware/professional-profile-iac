@@ -2,7 +2,7 @@ extends: default
 
 rules:
   line-length:
-    max: 200
+    max: 120
     level: warning
   document-start: disable
   truthy:
@@ -11,7 +11,7 @@ rules:
     min-spaces-from-content: 1
   indentation:
     spaces: 2
-    indent-sequences: true
+    indent-sequences: consistent
 
 ignore:
   - node_modules/

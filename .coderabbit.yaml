@@ -16,6 +16,14 @@ reviews:
       instructions: >
         Review for module reusability, proper input/output definitions,
         and documentation completeness.
+    - path: "CLAUDE.md"
+      instructions: >
+        Review for accuracy against actual repo structure, conventions,
+        and CI/CD pipeline configuration.
+    - path: ".github/scripts/**"
+      instructions: >
+        Review for shell scripting best practices, proper error handling,
+        and shellcheck/shellharden compliance.
   path_filters:
     - "!.terraform.lock.hcl"
 chat:
