@@ -4,6 +4,15 @@
 
 <!-- Brief description of the infrastructure changes -->
 
+## Area Affected
+
+- [ ] Terraform modules
+- [ ] CI/CD workflows
+- [ ] Composite actions
+- [ ] Scripts
+- [ ] Documentation
+- [ ] Configuration files
+
 ## Type of Change
 
 - [ ] Bug fix
@@ -19,4 +28,5 @@
 - [ ] `terraform plan` output reviewed
 - [ ] No hardcoded credentials or account IDs
 - [ ] No unnecessary cost implications
+- [ ] Pre-commit hooks pass (`pre-commit run --all-files`)
 - [ ] Markdownlint passes on all `.md` files

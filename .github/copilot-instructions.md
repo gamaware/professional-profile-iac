@@ -20,5 +20,18 @@ It provisions S3, CloudFront, Route 53, and ACM resources.
 5. **Least privilege** — IAM policies and roles should follow least-privilege
    principles.
 
-6. **Markdown quality** — 120-char limit (tables exempt), fenced code blocks,
+6. **Shell script quality** — Scripts must be shellcheck and shellharden
+   compliant. Variables must be quoted.
+
+7. **CI/CD security** — GitHub Actions workflows must use pinned action
+   versions and least-privilege permissions.
+
+8. **Markdown quality** — 120-char limit (tables exempt), fenced code blocks,
    ATX headings.
+
+## What NOT to flag
+
+- Accepted Checkov findings in `.checkov.yml` (WAF, logging, CMK encryption
+  for a personal static site).
+- Accepted Trivy findings in `.trivyignore` (same rationale).
+- Auto-generated `modules/*/README.md` files (managed by terraform-docs).

@@ -64,18 +64,7 @@ runs:
       id: plan
       shell: bash
       working-directory: ${{ inputs.working_directory }}
-      run: |
-        set +e
-        terraform plan -detailed-exitcode -no-color -out=tfplan 2>&1 | tee plan.txt
-        EXIT_CODE=$?
-        set -e
-
-        if [ "$EXIT_CODE" -eq 1 ]; then
-          echo "Terraform plan failed"
-          exit 1
-        fi
-
-        echo "Terraform plan completed (exit code: $EXIT_CODE)"
+      run: ${{ github.workspace }}/.github/scripts/terraform-plan.sh
 
     - name: Upload Plan Artifact
       if: inputs.terraform_command == 'plan'

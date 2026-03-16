@@ -11,6 +11,7 @@ on:
       - '.github/workflows/terraform-pr.yml'
       - '.github/actions/lint-and-security-composite/**'
       - '.github/actions/terraform-composite/**'
+      - '.github/scripts/**'
 
 concurrency:
   group: terraform-pr-${{ github.event.pull_request.number }}

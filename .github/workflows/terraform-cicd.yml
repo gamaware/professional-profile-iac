@@ -12,6 +12,7 @@ on:
       - 'modules/**'
       - '.github/workflows/terraform-cicd.yml'
       - '.github/actions/terraform-composite/**'
+      - '.github/scripts/**'
   workflow_dispatch:
     inputs:
       action:
@@ -104,3 +105,8 @@ jobs:
           working_directory: .
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           aws_region: ${{ vars.TF_VAR_aws_region }}
+
+      - name: Post-Destroy Validation
+        env:
+          EXPECTED_DOMAIN: alexgarcia.info
+        run: ${{ github.workspace }}/.github/scripts/validate-destroy.sh

@@ -201,6 +201,10 @@ jobs:
             echo "WARNING: README.md should have sections (##)"
           fi
 
+          if ! grep -q "!\[" README.md; then
+            echo "WARNING: README.md should have badges"
+          fi
+
           if ! grep -q -i "author\|created by" README.md; then
             echo "WARNING: README.md should have author information"
           fi
@@ -218,7 +222,7 @@ jobs:
           {
             echo "## README Quality"
             echo ""
-            echo "- Sections, author, and license checked"
+            echo "- Sections, badges, author, and license checked"
             echo "- Status: $STATUS"
           } >> "$GITHUB_STEP_SUMMARY"
 
