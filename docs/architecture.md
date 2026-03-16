@@ -15,7 +15,7 @@ managed AWS static site stack:
                              v
                     +------------------+
                     |   CloudFront     |
-                    |  E101E3TIVDODKY  |
+                    |  <DISTRIBUTION_ID>  |
                     |  HTTPS + HTTP/3  |
                     |  OAC Auth        |
                     +--------+---------+
