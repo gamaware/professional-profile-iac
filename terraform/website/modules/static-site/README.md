@@ -37,7 +37,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | domain\_name | Domain name for the static site | `string` | n/a | yes |
 | error\_document | Error document for S3 website hosting | `string` | `"error.html"` | no |
-| index\_document | Index document for S3 website hosting | `string` | `"detailed-resume.html"` | no |
+| index\_document | Index document for S3 website hosting | `string` | `"index.html"` | no |
 
 ## Outputs
 
