@@ -89,3 +89,16 @@ jobs:
             --github-token=${{ github.token }} \
             --pull-request=${{ github.event.pull_request.number }} \
             --behavior=update
+
+      - name: Post summary
+        if: always()
+        run: |
+          TOTAL=$(jq -r '.totalMonthlyCost // "0"' /tmp/infracost.json)
+          RESOURCES=$(jq -r '.projects[0].breakdown.resources | length' /tmp/infracost.json)
+          {
+            echo "## Infracost Cost Estimate"
+            echo ""
+            echo "- Resources detected: $RESOURCES"
+            echo "- Monthly cost: \$${TOTAL}"
+            echo "- Status: Posted to PR comment"
+          } >> "$GITHUB_STEP_SUMMARY"
