@@ -24,7 +24,7 @@ Terraform infrastructure for the professional profile website at
 # 1. Authenticate
 aws sso login --profile personal
 
-# 2. Install pre-commit hooks (26 checks)
+# 2. Install pre-commit hooks (25 checks)
 pre-commit install
 vale sync
 
@@ -103,7 +103,7 @@ cp terraform/website/terraform.tfvars.example terraform/website/terraform.tfvars
 ```mermaid
 flowchart TB
     A([Create Feature Branch]) --> B[Make Changes]
-    B --> C[Pre-commit Hooks<br/>26 checks]
+    B --> C[Pre-commit Hooks<br/>25 checks]
     C --> D[Push & Create PR]
     D --> E{CI Checks}
     E -->|Pass| F[Squash Merge]
