@@ -11,16 +11,18 @@ Manages S3 bucket, CloudFront distribution, Route 53 DNS records, and ACM certif
 ## Repository Structure
 
 ```text
-main.tf                 # Root module configuration
-variables.tf            # Input variables
-outputs.tf              # Output values
-providers.tf            # Provider configuration
-backend.tf              # State backend configuration
-modules/
-  static-site/          # Reusable module for S3 + CloudFront static site
-    main.tf
-    variables.tf
-    outputs.tf
+terraform/website/
+  main.tf               # Root module configuration
+  variables.tf          # Input variables
+  outputs.tf            # Output values
+  providers.tf          # Provider configuration
+  backend.tf            # State backend configuration
+  terraform.tfvars.example  # Variable template
+  modules/
+    static-site/        # Reusable module for S3 + CloudFront static site
+      main.tf
+      variables.tf
+      outputs.tf
 docs/
   adr/                  # Architecture Decision Records (dateless)
 .claude/

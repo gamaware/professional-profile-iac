@@ -53,7 +53,7 @@ jobs:
         id: mdlint
         uses: DavidAnson/markdownlint-cli2-action@v22
         with:
-          globs: '**/*.md !modules/*/README.md'
+          globs: '**/*.md !terraform/website/modules/*/README.md'
           config: '.markdownlint.yaml'
 
       - name: Post summary
@@ -156,7 +156,7 @@ jobs:
             fi
           done
 
-          for dir in .github/ISSUE_TEMPLATE docs modules; do
+          for dir in .github/ISSUE_TEMPLATE docs terraform; do
             if [ ! -d "$dir" ]; then
               echo "ERROR: $dir/ directory missing"
               errors=$((errors + 1))
@@ -287,7 +287,7 @@ jobs:
         run: |
           vale sync
           find . -name '*.md' -not -path './styles/*' -not -path './.git/*' \
-            -not -path './modules/*/README.md' \
+            -not -path './terraform/website/modules/*/README.md' \
             -exec vale {} +
 
       - name: Post summary

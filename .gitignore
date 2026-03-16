@@ -8,6 +8,7 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+terraform/**/modules/**/.terraform.lock.hcl
 
 # IDE
 .vscode/
@@ -19,6 +20,7 @@ override.tf.json
 
 # Kiro CLI
 *.conversation
+.kiro/
 
 # Environment variables
 .env
@@ -36,6 +38,13 @@ styles/
 *.log
 logs/
 
+# Python
+.venv/
+venv/
+
 # Local variable overrides
 terraform.tfvars
-modules/**/.terraform.lock.hcl
+!terraform.tfvars.example
+
+# AI analysis output
+ai-analysis.md

@@ -66,6 +66,9 @@ gh api repos/{owner}/{repo}/pulls/{number}/comments
 gh api repos/{owner}/{repo}/issues/{number}/comments
 ```
 
+If CodeRabbit is rate-limited, wait for the timeout period then trigger
+with `gh pr comment <number> --body "@coderabbitai review"`.
+
 For each review comment:
 
 1. Read the comment carefully.
@@ -74,11 +77,39 @@ For each review comment:
 3. If the comment is valid, fix the issue, commit, and push.
 4. After fixing, re-monitor CI (return to Phase 3).
 
-After all fixes are pushed, resolve stale CodeRabbit threads:
+After all fixes are pushed and the incremental review passes, resolve
+stale CodeRabbit threads in bulk:
 
 ```bash
 gh pr comment <number> --body "@coderabbitai resolve"
 ```
+
+For Copilot and any remaining unresolved threads, resolve via GraphQL:
+
+```bash
+# Get all unresolved thread IDs
+gh api graphql -f query='
+  { repository(owner: "gamaware", name: "professional-profile-iac") {
+    pullRequest(number: <NUMBER>) {
+      reviewThreads(first: 100) {
+        nodes { id isResolved }
+      }
+    }
+  }}'
+```
+
+Then for each unresolved thread ID:
+
+```bash
+gh api graphql -f query='
+  mutation { resolveReviewThread(input: {threadId: "<ID>"}) {
+    thread { isResolved }
+  }}'
+```
+
+Copilot auto re-reviews on push ("Review new pushes" ruleset is enabled),
+but may duplicate previously resolved comments. After the final review
+passes, resolve all remaining threads in bulk.
 
 ## Phase 5 — Merge
 
@@ -100,9 +131,48 @@ Pull main locally after merge:
 git checkout main && git pull
 ```
 
+Report the merge commit and confirm the branch was deleted.
+
+## Phase 6 — Post-Deploy Analysis (terraform changes only)
+
+Skip this phase if the PR did not modify any files under `terraform/`,
+`.github/actions/`, `.github/scripts/`, or `.github/workflows/terraform-cicd.yml`.
+
+After merge, the terraform-cicd workflow runs automatically. The workflow
+pauses at the `production` environment gate — it may need manual approval
+before apply proceeds. Wait for the full run to complete:
+
+```bash
+# Find the deploy run triggered by the merge
+gh run list --branch main --limit 3 --workflow terraform-cicd.yml \
+  --json databaseId,status --jq '.[0].databaseId'
+
+# Watch it complete (includes environment gate wait)
+gh run watch <run-id> --exit-status
+```
+
+After the run completes, check the Post-Deployment Validation step for
+PASS/FAIL results:
+
+```bash
+gh run view <run-id> --log | grep -A 10 "Post-Deployment Validation"
+```
+
+If validation fails, check the workflow logs:
+
+```bash
+gh run view <run-id> --log-failed
+```
+
 ## Rules
 
 - Never suppress lint violations — fix them.
 - No AI attribution in commits.
 - Conventional commit messages required.
+- CodeRabbit may hit hourly rate limits — wait and retry.
+- Copilot comments may be stale after fix commits — verify current file state.
+- CodeRabbit auto-reviews incrementally on every push (up to 5 commits,
+  then pauses). Use `@coderabbitai review` to resume after pause.
+- CodeRabbit does NOT auto-resolve its threads — use `@coderabbitai resolve`
+  after fixes are confirmed.
 - Use `--admin` to bypass branch protection for merge.

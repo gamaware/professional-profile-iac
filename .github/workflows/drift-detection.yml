@@ -28,7 +28,7 @@ jobs:
       - name: Detect Drift
         uses: ./.github/actions/drift-detection-composite
         with:
-          working_directory: .
+          working_directory: terraform/website
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           aws_region: ${{ vars.TF_VAR_aws_region }}
           github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -4,7 +4,7 @@ reviews:
     enabled: true
     drafts: false
   path_instructions:
-    - path: "**/*.tf"
+    - path: "terraform/**/*.tf"
       instructions: >
         Review for Terraform best practices, proper variable usage,
         no hardcoded values, and security considerations.
@@ -12,7 +12,7 @@ reviews:
       instructions: >
         Review for GitHub Actions security best practices, pinned action
         versions, and least-privilege permissions.
-    - path: "modules/**"
+    - path: "terraform/website/modules/**"
       instructions: >
         Review for module reusability, proper input/output definitions,
         and documentation completeness.

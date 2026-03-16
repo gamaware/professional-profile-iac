@@ -6,8 +6,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - '*.tf'
-      - 'modules/**'
+      - 'terraform/**'
       - '.github/workflows/terraform-pr.yml'
       - '.github/actions/lint-and-security-composite/**'
       - '.github/actions/terraform-composite/**'
@@ -33,7 +32,7 @@ jobs:
       - name: Run Lint and Security
         uses: ./.github/actions/lint-and-security-composite
         with:
-          working_directory: .
+          working_directory: terraform/website
 
   terraform-plan:
     name: Terraform Plan
@@ -54,6 +53,6 @@ jobs:
         uses: ./.github/actions/terraform-composite
         with:
           terraform_command: plan
-          working_directory: .
+          working_directory: terraform/website
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           aws_region: ${{ vars.TF_VAR_aws_region }}
