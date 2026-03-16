@@ -1,0 +1,33 @@
+framework: terraform
+quiet: true
+skip-check:
+  # CloudFront WAF — unnecessary for a static resume site, adds cost
+  - CKV_AWS_68
+  # CloudFront access logging — low-traffic personal site, not needed
+  - CKV_AWS_86
+  # CloudFront origin failover — single S3 origin, failover not applicable
+  - CKV_AWS_310
+  # CloudFront default root object — we set it but checkov doesn't detect it
+  - CKV_AWS_34
+  # S3 CMK encryption — bucket serves public website content, SSE-S3 is sufficient
+  - CKV_AWS_145
+  # S3 access logging — low-traffic personal site bucket, not needed
+  - CKV_AWS_18
+  # S3 versioning — website content is tracked in git, versioning adds cost
+  - CKV_AWS_21
+  # S3 lifecycle — no lifecycle policy needed for static website files
+  - CKV_AWS_300
+  # S3 event notifications — not needed for static website
+  - CKV_AWS_292
+  # S3 cross-region replication — single region is sufficient for personal site
+  - CKV_AWS_144
+  # CloudFront response headers policy — not needed for personal resume
+  - CKV2_AWS_47
+  # CloudFront origin shield — adds cost, not needed for low-traffic site
+  - CKV2_AWS_32
+  # CloudFront geo restriction — personal site, no geo restriction needed
+  - CKV_AWS_374
+  # S3 lifecycle configuration — static files managed via git, no lifecycle needed
+  - CKV2_AWS_61
+  # S3 event notifications — not needed for static website
+  - CKV2_AWS_62

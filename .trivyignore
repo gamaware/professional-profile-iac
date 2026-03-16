@@ -3,3 +3,15 @@ AVD-AWS-0011
 
 # AWS-0132: S3 CMK encryption — bucket serves public website content, SSE-S3 is sufficient
 AVD-AWS-0132
+
+# AWS-0010: CloudFront access logging — low-traffic personal site, not needed
+AVD-AWS-0010
+
+# AWS-0089: S3 bucket logging — low-traffic personal site, not needed
+AVD-AWS-0089
+
+# AWS-0090: S3 versioning — website content tracked in git, versioning adds cost
+AVD-AWS-0090
+
+# AWS-0320: S3 bucket name DNS compliance — bucket named after domain (alexgarcia.info)
+AVD-AWS-0320
