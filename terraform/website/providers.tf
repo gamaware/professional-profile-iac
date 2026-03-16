@@ -9,17 +9,21 @@ terraform {
   }
 }
 
+locals {
+  default_tags = {
+    ManagedBy  = "terraform"
+    Repository = "professional-profile-iac"
+    Project    = "professional-profile"
+    Owner      = "gamaware"
+  }
+}
+
 provider "aws" {
   region  = var.aws_region
   profile = var.aws_profile
 
   default_tags {
-    tags = {
-      ManagedBy  = "terraform"
-      Repository = "professional-profile-iac"
-      Project    = "professional-profile"
-      Owner      = "gamaware"
-    }
+    tags = local.default_tags
   }
 }
 
@@ -30,11 +34,6 @@ provider "aws" {
   profile = var.aws_profile
 
   default_tags {
-    tags = {
-      ManagedBy  = "terraform"
-      Repository = "professional-profile-iac"
-      Project    = "professional-profile"
-      Owner      = "gamaware"
-    }
+    tags = local.default_tags
   }
 }
