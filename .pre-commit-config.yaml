@@ -36,13 +36,15 @@ repos:
     hooks:
       - id: terraform_fmt
       - id: terraform_validate
+        exclude: ^modules/
       - id: terraform_tflint
       - id: terraform_docs
       - id: terraform_trivy
+        args:
+          - --args=--ignorefile=__GIT_WORKING_DIR__/.trivyignore
       - id: terraform_checkov
         args:
-          - --args=--quiet
-          - --args=--framework=terraform
+          - --args=--config-file=__GIT_WORKING_DIR__/.checkov.yml
 
   - repo: local
     hooks:
