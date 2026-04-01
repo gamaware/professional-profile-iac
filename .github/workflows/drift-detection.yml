@@ -1,4 +1,12 @@
+# -----------------------------------------------------------------
+# Drift Detection — detect Terraform configuration drift
+#
+# Runs on: daily at 9 AM UTC (3 AM CST) or manual dispatch
+# Jobs: detect-drift (runs terraform plan, opens issue on drift)
+# Concurrency: terraform-state (shared with CI/CD — serialized)
+# -----------------------------------------------------------------
 name: Drift Detection
+run-name: "Drift Detection (${{ github.event_name }})"
 
 on:
   schedule:

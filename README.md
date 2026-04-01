@@ -49,15 +49,17 @@ terraform/
     providers.tf                  # Provider configuration
     backend.tf                    # S3 state backend
     terraform.tfvars.example      # Variable template
+    tests/                        # Native terraform test files (mocked)
     modules/
       static-site/                # S3 + CloudFront + Route 53 module
         main.tf
         variables.tf
         outputs.tf
         .terraform-docs.yml       # Auto-doc generation config
+tests/                            # Terratest Go integration tests
 docs/
   architecture.md                 # Architecture and security design
-  adr/                            # Architecture Decision Records (5)
+  adr/                            # Architecture Decision Records (6)
   github-oidc-setup.md            # OIDC authentication guide
   github-variables-setup.md       # GitHub variables guide
   prerequisites.md                # Setup prerequisites
@@ -118,11 +120,10 @@ flowchart TB
 
 | Workflow | Trigger | Purpose |
 | --- | --- | --- |
-| `terraform-pr.yml` | PR with `terraform/` changes | Lint, security, plan, cost estimate |
-| `terraform-cicd.yml` | Push to main | Plan, approval gate, apply, validation |
+| `terraform-pr.yml` | PR with `terraform/` changes | Lint, security, terraform test, plan, cost estimate |
+| `terraform-cicd.yml` | Push to main | Plan, approval gate, apply, Terratest validation |
 | `drift-detection.yml` | Daily 9 AM UTC | Detect infrastructure drift |
-| `quality-checks.yml` | Every PR and push | Markdown, YAML, shell, prose, zizmor |
-| `security.yml` | Every PR and push | Semgrep SAST + Trivy IaC scan |
+| `ci-checks.yml` | Every PR and push | Markdown, YAML, shell, prose, zizmor, Semgrep, Trivy |
 | `update-pre-commit-hooks.yml` | Weekly (Sunday) | Auto-update hook versions |
 
 ## Authentication

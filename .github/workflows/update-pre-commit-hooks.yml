@@ -1,4 +1,12 @@
+# -----------------------------------------------------------------
+# Update Pre-commit Hooks — auto-update hook versions weekly
+#
+# Runs on: weekly (Sunday midnight UTC) or manual dispatch
+# Jobs: update-hooks (runs pre-commit autoupdate, opens PR)
+# Concurrency: pre-commit-update (no cancel — single run)
+# -----------------------------------------------------------------
 name: Update Pre-commit Hooks
+run-name: "Update Pre-commit Hooks (${{ github.event_name }})"
 
 on:
   schedule:

@@ -1,3 +1,11 @@
+# -----------------------------------------------------------------
+# Terraform PR Checks — lint, security, test, plan for pull requests
+#
+# Runs on: PRs targeting main (terraform/**, workflow, action, and
+#           script changes)
+# Jobs: lint-and-security, terraform-test, terraform-plan, infracost
+# Concurrency: cancels in-progress runs per PR number
+# -----------------------------------------------------------------
 name: Terraform PR Checks
 run-name: >-
   Terraform PR checks (PR #${{ github.event.pull_request.number }})
@@ -34,11 +42,54 @@ jobs:
         with:
           working_directory: terraform/website
 
+  terraform-test:
+    name: Terraform Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.14.5"
+          terraform_wrapper: false
+
+      - name: Override Backend
+        working-directory: terraform/website
+        shell: bash
+        run: printf 'terraform {\n  backend "local" {}\n}\n' > backend_override.tf
+
+      - name: Terraform Init
+        working-directory: terraform/website
+        run: terraform init
+
+      - name: Run Terraform Tests
+        working-directory: terraform/website
+        shell: bash
+        run: |
+          set +eo pipefail
+          terraform test -verbose 2>&1 | tee test-output.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+          set -eo pipefail
+          {
+            echo "### Terraform Test: website"
+            echo '```'
+            tail -20 test-output.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$EXIT_CODE"
+
   terraform-plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: lint-and-security
+    needs: [lint-and-security, terraform-test]
     permissions:
       id-token: write
       contents: read
