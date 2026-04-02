@@ -73,10 +73,10 @@ jobs:
         working-directory: terraform/website
         shell: bash
         run: |
-          set +eo pipefail
+          set +e
           terraform test -verbose 2>&1 | tee test-output.txt
           EXIT_CODE=${PIPESTATUS[0]}
-          set -eo pipefail
+          set -e
           {
             echo "### Terraform Test: website"
             echo '```'

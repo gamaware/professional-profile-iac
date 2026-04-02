@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	acmtypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
@@ -221,7 +222,10 @@ func TestWebsiteHealth(t *testing.T) {
 	websiteURL := terraform.Output(t, opts, "website_url")
 	require.NotEmpty(t, websiteURL, "website_url output should not be empty")
 
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, websiteURL, nil)
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, websiteURL, nil)
 	require.NoError(t, err, "Creating HTTP request should succeed")
 
 	resp, err := http.DefaultClient.Do(req)
