@@ -12,3 +12,4 @@ professional profile infrastructure.
 | [003](003-cicd-pipeline.md) | CI/CD Pipeline Design |
 | [004](004-iam-least-privilege.md) | IAM Least Privilege for CI/CD |
 | [005](005-defense-in-depth.md) | Defense in Depth |
+| [006](006-terraform-testing.md) | Terraform Testing Strategy |

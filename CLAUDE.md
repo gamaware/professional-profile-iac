@@ -23,6 +23,7 @@ terraform/website/
       main.tf
       variables.tf
       outputs.tf
+  tests/                # Native terraform test files (mocked)
 docs/
   adr/                  # Architecture Decision Records (dateless)
 .claude/
@@ -37,6 +38,7 @@ docs/
   PULL_REQUEST_TEMPLATE.md
   copilot-instructions.md  # Copilot code review custom instructions
   dependabot.yml        # Dependabot configuration
+tests/                    # Terratest Go integration tests
 ```
 
 ## Git Workflow
@@ -159,15 +161,11 @@ PR checks — TFLint, Checkov security scan, plan preview, plan output as PR com
 
 Daily at 9 AM UTC — detects config drift, creates GitHub issue.
 
-### quality-checks.yml
+### ci-checks.yml
 
-Runs on every PR and push to main — markdownlint, link checking, shellcheck, yamllint,
-zizmor, file structure validation, README quality check, Vale (prose linting).
-Each job posts a `$GITHUB_STEP_SUMMARY` with scan counts and status.
-
-### security.yml
-
-Runs on every PR and push to main — Semgrep SAST and Trivy IaC scanning.
+Runs on every PR and push to main — repo-wide checks: markdownlint, link checking,
+shellcheck, yamllint, zizmor, file structure validation, README quality check,
+Vale (prose linting), Semgrep SAST, and Trivy IaC scanning.
 
 ### update-pre-commit-hooks.yml
 
@@ -176,6 +174,71 @@ Weekly auto-update of pre-commit hook versions via PR.
 ### Dependabot
 
 Monitors GitHub Actions and Terraform provider dependencies weekly.
+
+### Workflow relationships
+
+```text
+PR opened (terraform/**)
+├── ci-checks.yml         → repo-wide: markdown, shell, YAML, structure, Semgrep, Trivy
+└── terraform-pr.yml      → TF-specific: TFLint, Checkov, terraform test, plan, Infracost
+
+Push to main (terraform/**)
+├── ci-checks.yml         → same repo-wide checks
+└── terraform-cicd.yml    → quality gate polls ci-checks, then plan → apply → Terratest
+```
+
+## Testing
+
+### terraform test (native, mocked)
+
+Unit-level configuration tests using Terraform's built-in test framework with mocked
+providers. No AWS credentials required.
+
+**Location:** `terraform/website/tests/*.tftest.hcl`
+
+**Run locally:**
+
+```bash
+cd terraform/website
+printf 'terraform {\n  backend "local" {}\n}\n' > backend_override.tf
+terraform init -reconfigure
+terraform test -verbose
+rm backend_override.tf
+```
+
+**CI:** Runs as `terraform-test` job in `terraform-pr.yml` (parallel with lint-and-security).
+
+**What it tests:**
+
+- Variable defaults and acceptance
+- S3 bucket naming, public access block
+- CloudFront configuration (HTTPS, HTTP/2+3, TLS, OAC)
+- Route53 record type
+- Module output values
+
+### Terratest (Go integration tests)
+
+Read-only post-deploy verification using AWS SDK v2. Tests do not create or destroy
+infrastructure — they validate already-deployed resources via API calls.
+
+**Location:** `tests/` at repo root
+
+**Run locally:**
+
+```bash
+cd tests
+go test -v -timeout 5m ./...
+```
+
+**CI:** Runs after terraform apply in `terraform-cicd.yml`.
+
+**What it tests:**
+
+- S3 bucket existence and public access configuration
+- CloudFront distribution settings (HTTPS, TLS, OAC, HTTP/2+3)
+- Route53 DNS resolution
+- ACM certificate validity
+- Website HTTP health check
 
 ## Code Review
 

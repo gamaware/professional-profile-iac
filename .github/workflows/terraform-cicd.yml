@@ -1,3 +1,14 @@
+# -----------------------------------------------------------------
+# Terraform CI/CD — plan, apply, and destroy for main branch
+#
+# Runs on: push to main (terraform/**, workflow, action, script, and
+#           test changes) or manual workflow_dispatch (apply/destroy)
+# Jobs: quality-gate, terraform-plan, terraform-apply (with
+#        post-deploy validation + integration tests),
+#        terraform-destroy (manual only)
+# Concurrency: terraform-state (no cancel — serialized operations)
+# Gate: quality-gate polls ci-checks.yml before authorizing plan
+# -----------------------------------------------------------------
 name: Terraform CI/CD
 run-name: >-
   ${{ github.event_name == 'workflow_dispatch'
@@ -13,6 +24,7 @@ on:
       - '.github/actions/terraform-composite/**'
       - '.github/actions/quality-gate-composite/**'
       - '.github/scripts/**'
+      - 'tests/**'
   workflow_dispatch:
     inputs:
       action:
@@ -102,6 +114,31 @@ jobs:
           working_directory: terraform/website
           aws_region: ${{ vars.TF_VAR_aws_region }}
           expected_domain: alexgarcia.info
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache-dependency-path: tests/go.sum
+
+      - name: Run Integration Tests
+        working-directory: tests
+        env:
+          AWS_REGION: ${{ vars.TF_VAR_aws_region }}
+          TF_WORKING_DIR: ${{ github.workspace }}/terraform/website
+        shell: bash
+        run: |
+          set +e
+          go test -v -timeout 5m -run TestWebsite ./... 2>&1 | tee test-output.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+          set -e
+          {
+            echo "### Integration Tests: Website"
+            echo '```'
+            grep -E '(PASS|FAIL|ok |--- )' test-output.txt || tail -20 test-output.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$EXIT_CODE"
 
   terraform-destroy:
     name: Terraform Destroy
