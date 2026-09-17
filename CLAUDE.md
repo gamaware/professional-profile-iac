@@ -182,9 +182,11 @@ Weekly auto-update of pre-commit hook versions via PR.
 Hourly scheduled job that squash-merges Dependabot PRs and the weekly pre-commit
 update PR once every check is green and none is pending. Uses the `PRE_COMMIT_PAT`
 secret with admin bypass because GitHub refuses self-approval on PRs authored with
-the owner's token. Skips drafts, forks, conflicts, and PRs from any other author.
-The job runs in the `automation` environment, which GitHub creates on first use;
-it exists only so secrets are scoped to an environment and carries no gate.
+the owner's token. Skips drafts, forks, conflicts, PRs from any other author, PRs
+not targeting `main`, and PRs with no registered checks. The merge is bound to the
+inspected head commit, so a push after the check inspection is refused. The job
+declares the `automation` environment only to satisfy the zizmor secrets-outside-env
+policy; that environment carries no protection rules.
 
 ### Dependabot
 
