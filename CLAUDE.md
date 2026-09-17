@@ -268,7 +268,10 @@ go test -v -timeout 5m ./...
 ## GitHub Actions Security
 
 - All `actions/checkout` steps must include `persist-credentials: false`.
-- Action references use tag pins (e.g., `@v6`); configured via `zizmor.yml`.
+- Action references are pinned to full commit SHAs with a trailing version comment
+  (e.g., `@<sha> # v6.1.0`); enforced by the `hash-pin` policy in `zizmor.yml`.
+  Dependabot keeps the SHAs and comments current for
+  workflows and composite actions (both directories are listed in `dependabot.yml`).
 - zizmor runs in CI and as a pre-commit hook to catch security issues in workflows.
 
 ## Architecture Decision Records
