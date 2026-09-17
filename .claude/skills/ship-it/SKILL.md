@@ -183,22 +183,30 @@ and delete local branches that have been removed from the remote:
 git fetch --prune
 ```
 
-Then check for and remove any stale local branches:
+Then remove stale local branches, but only those whose PR was merged.
+A `[gone]` upstream also appears for closed-but-unmerged PRs and for
+remote branches deleted by hand, and those may still hold unmerged work.
 
 ```bash
-git branch -v | grep '\[gone\]' | sed 's/^[+* ]//' | awk '{print $1}' | while read branch; do
+git branch -v | grep '\[gone\]' | sed 's/^[+* ]//' | awk '{print $1}' | while read -r branch; do
   echo "Processing branch: $branch"
+  merged=$(gh pr list --state merged --head "$branch" --json number --jq 'length')
+  if [ "$merged" -eq 0 ]; then
+    echo "  Kept: no merged PR found for $branch (delete manually if intended)"
+    continue
+  fi
   worktree=$(git worktree list | grep "\\[$branch\\]" | awk '{print $1}')
-  if [ ! -z "$worktree" ] && [ "$worktree" != "$(git rev-parse --show-toplevel)" ]; then
+  if [ -n "$worktree" ] && [ "$worktree" != "$(git rev-parse --show-toplevel)" ]; then
     echo "  Removing worktree: $worktree"
-    git worktree remove --force "$worktree"
+    git worktree remove "$worktree" || echo "  Kept worktree (has local changes): $worktree"
   fi
   echo "  Deleting branch: $branch"
   git branch -D "$branch"
 done
 ```
 
-If no branches are marked as `[gone]`, report that no cleanup was needed.
+Report branches that were kept so the user can decide. If no branches
+are marked as `[gone]`, report that no cleanup was needed.
 
 ## Rules
 
