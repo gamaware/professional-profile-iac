@@ -45,7 +45,7 @@ backend override automatically (create, init, test, cleanup).
 
    ```bash
    rm -f backend_override.tf
-   terraform init -reconfigure -input=false
+   terraform init -reconfigure -input=false -backend-config="profile=personal"
    ```
 
 6. Report results. If any test failed, show the failing assertions and

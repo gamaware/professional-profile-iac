@@ -190,9 +190,11 @@ remote branches deleted by hand, and those may still hold unmerged work.
 ```bash
 git branch -v | grep '\[gone\]' | sed 's/^[+* ]//' | awk '{print $1}' | while read -r branch; do
   echo "Processing branch: $branch"
-  merged=$(gh pr list --state merged --head "$branch" --json number --jq 'length')
+  tip=$(git rev-parse "$branch")
+  merged=$(gh pr list --state merged --head "$branch" --json headRefOid \
+    --jq --arg tip "$tip" '[.[] | select(.headRefOid == $tip)] | length')
   if [ "$merged" -eq 0 ]; then
-    echo "  Kept: no merged PR found for $branch (delete manually if intended)"
+    echo "  Kept: no merged PR matches the local tip of $branch (delete manually if intended)"
     continue
   fi
   worktree=$(git worktree list --porcelain | awk -v ref="branch refs/heads/$branch" \
