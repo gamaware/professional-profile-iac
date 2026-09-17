@@ -125,6 +125,7 @@ flowchart TB
 | `drift-detection.yml` | Daily 9 AM UTC | Detect infrastructure drift |
 | `ci-checks.yml` | Every PR and push | Markdown, YAML, shell, prose, zizmor, Semgrep, Trivy |
 | `update-pre-commit-hooks.yml` | Weekly (Sunday) | Auto-update hook versions |
+| `auto-merge-bot-prs.yml` | Hourly | Squash-merge green Dependabot and pre-commit PRs |
 
 ## Authentication
 

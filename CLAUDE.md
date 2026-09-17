@@ -177,6 +177,15 @@ Vale (prose linting), Semgrep SAST, and Trivy IaC scanning.
 
 Weekly auto-update of pre-commit hook versions via PR.
 
+### auto-merge-bot-prs.yml
+
+Hourly scheduled job that squash-merges Dependabot PRs and the weekly pre-commit
+update PR once every check is green and none is pending. Uses the `PRE_COMMIT_PAT`
+secret with admin bypass because GitHub refuses self-approval on PRs authored with
+the owner's token. Skips drafts, forks, conflicts, and PRs from any other author.
+The job runs in the `automation` environment, which GitHub creates on first use;
+it exists only so secrets are scoped to an environment and carries no gate.
+
 ### Dependabot
 
 Monitors GitHub Actions and Terraform provider dependencies weekly.
