@@ -48,3 +48,6 @@ terraform.tfvars
 
 # AI analysis output
 ai-analysis.md
+
+# Temporary local backend written by the /tf-test skill
+backend_override.tf
