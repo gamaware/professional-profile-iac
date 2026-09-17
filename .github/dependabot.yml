@@ -1,11 +1,16 @@
 version: 2
 updates:
-  # GitHub Actions
+  # GitHub Actions: workflows plus the composite actions, which Dependabot
+  # does not scan from the root directory alone.
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directories:
+      - "/"
+      - "/.github/actions/*"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
 
   # Terraform
   - package-ecosystem: "terraform"
@@ -13,3 +18,5 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7

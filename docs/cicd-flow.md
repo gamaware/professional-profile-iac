@@ -145,6 +145,16 @@ the `drift` label.
 
 Runs `pre-commit autoupdate` and creates a PR with version bumps.
 
+### 7. Auto-merge Bot PRs (`auto-merge-bot-prs.yml`)
+
+**Triggers:** Hourly (cron), or manual
+
+Squash-merges open Dependabot PRs and the weekly pre-commit update PR once
+all checks are green and none is pending. Merges with admin bypass using the
+`PRE_COMMIT_PAT` secret, because GitHub refuses self-approval on PRs authored
+with the owner's token. Skips drafts, PRs with conflicts, and PRs from any
+other author. A PR that is behind `main` is updated and picked up next run.
+
 ## Authentication
 
 All AWS access uses OIDC (OpenID Connect) — no static credentials:
