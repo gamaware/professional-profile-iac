@@ -66,7 +66,7 @@ docs/
 .claude/
   settings.json                   # Claude Code hooks config
   hooks/                          # Post-edit and protect hooks
-  skills/ship/                    # /ship PR lifecycle skill
+  skills/                         # /ship-it (local override), /tf-test, /validate
 .github/
   actions/                        # Composite actions (5)
   scripts/                        # Shell scripts (7)

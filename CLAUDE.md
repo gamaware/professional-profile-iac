@@ -29,7 +29,7 @@ docs/
 .claude/
   settings.json         # Project-level Claude Code settings (hooks, permissions)
   hooks/                # Automation hooks (post-edit, protect-generated)
-  skills/               # Reusable skills (/ship for PR lifecycle)
+  skills/               # Reusable skills (/ship-it override, /tf-test, /validate)
 .github/
   actions/              # Composite actions (terraform, lint, drift, validation, update)
   scripts/              # Shell scripts (plan, drift, validation, destroy)
@@ -109,9 +109,15 @@ Hooks in `.claude/settings.json` automate deterministic actions:
 
 ## Claude Code Skills
 
-- **`/ship [PR-number]`** — End-to-end PR lifecycle: updates docs, commits, creates PR,
-  monitors CI, addresses CodeRabbit and Copilot review comments, and merges with
-  `--admin`. Pass a PR number to resume monitoring.
+- **`/ship-it [PR-number]`** — End-to-end PR lifecycle: updates docs, commits, creates PR,
+  monitors CI, addresses CodeRabbit and Copilot review comments, merges with
+  `--admin`, monitors terraform deploy, and cleans up stale local branches.
+  Pass a PR number to resume monitoring. Local override adds terraform post-deploy.
+- **`/tf-test [filter]`** — Run native terraform tests locally with automatic backend
+  override handling (create override, init, test, cleanup). Pass a test name to filter.
+- **`/validate [category]`** — Run all local validation checks: terraform fmt/validate/tflint,
+  shellcheck/shellharden, markdownlint, yamllint. Pass `tf`, `shell`, `md`, or `yaml`
+  to run a single category.
 
 ## Linting Policy
 

@@ -1,20 +1,22 @@
 ---
-name: ship
+name: ship-it
 description: >-
   End-to-end PR lifecycle: update docs, commit, create PR, monitor CI,
-  address CodeRabbit and Copilot reviews, and merge. Use this skill
-  whenever the user says "ship it", "send a PR", "commit and merge",
-  "push this", or wants to finalize and land their changes. Pass a PR
-  number to resume monitoring an existing PR.
+  address CodeRabbit and Copilot reviews, merge, monitor terraform
+  deploy, and clean up stale branches. Use this skill whenever the user
+  says "ship it", "send a PR", "commit and merge", "push this", or
+  wants to finalize and land their changes. Pass a PR number to resume
+  monitoring an existing PR.
 disable-model-invocation: true
 user-invocable: true
 argument-hint: "[optional PR number to resume monitoring]"
 ---
 
-# Ship — Commit, Monitor, Fix, Merge
+# Ship It — Commit, Monitor, Fix, Merge, Deploy, Clean Up
 
 End-to-end workflow: update documentation, commit, create PR, monitor CI
-and code reviews, address feedback, and merge when everything passes.
+and code reviews, address feedback, merge when everything passes, watch
+terraform deploy, and clean up stale local branches.
 
 If `$ARGUMENTS` contains a PR number, skip to the monitoring phase for
 that PR.
@@ -172,6 +174,32 @@ If validation fails, check the workflow logs:
 gh run view <run-id> --log-failed
 ```
 
+## Phase 7 — Clean Up Stale Branches
+
+After merge (and post-deploy if applicable), prune remote tracking refs
+and delete local branches that have been removed from the remote:
+
+```bash
+git fetch --prune
+```
+
+Then check for and remove any stale local branches:
+
+```bash
+git branch -v | grep '\[gone\]' | sed 's/^[+* ]//' | awk '{print $1}' | while read branch; do
+  echo "Processing branch: $branch"
+  worktree=$(git worktree list | grep "\\[$branch\\]" | awk '{print $1}')
+  if [ ! -z "$worktree" ] && [ "$worktree" != "$(git rev-parse --show-toplevel)" ]; then
+    echo "  Removing worktree: $worktree"
+    git worktree remove --force "$worktree"
+  fi
+  echo "  Deleting branch: $branch"
+  git branch -D "$branch"
+done
+```
+
+If no branches are marked as `[gone]`, report that no cleanup was needed.
+
 ## Rules
 
 - Never suppress lint violations — fix them.
@@ -179,8 +207,11 @@ gh run view <run-id> --log-failed
 - Conventional commit messages required.
 - CodeRabbit may hit hourly rate limits — wait and retry.
 - Copilot comments may be stale after fix commits — verify current file state.
+- Copilot auto re-reviews on push ("Review new pushes" ruleset is enabled).
 - CodeRabbit auto-reviews incrementally on every push (up to 5 commits,
   then pauses). Use `@coderabbitai review` to resume after pause.
 - CodeRabbit does NOT auto-resolve its threads — use `@coderabbitai resolve`
   after fixes are confirmed.
+- Neither reviewer auto-resolves threads. Use `@coderabbitai resolve` for
+  CodeRabbit and GraphQL `resolveReviewThread` for Copilot/all threads.
 - Use `--admin` to bypass branch protection for merge.
