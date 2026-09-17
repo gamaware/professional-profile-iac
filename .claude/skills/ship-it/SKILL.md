@@ -195,7 +195,8 @@ git branch -v | grep '\[gone\]' | sed 's/^[+* ]//' | awk '{print $1}' | while re
     echo "  Kept: no merged PR found for $branch (delete manually if intended)"
     continue
   fi
-  worktree=$(git worktree list | grep "\\[$branch\\]" | awk '{print $1}')
+  worktree=$(git worktree list --porcelain | awk -v ref="branch refs/heads/$branch" \
+    '/^worktree /{wt=$2} $0==ref{print wt}')
   if [ -n "$worktree" ] && [ "$worktree" != "$(git rev-parse --show-toplevel)" ]; then
     echo "  Removing worktree: $worktree"
     git worktree remove "$worktree" || echo "  Kept worktree (has local changes): $worktree"

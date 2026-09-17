@@ -22,6 +22,8 @@ run all categories in order.
 
 ```bash
 cd "$CLAUDE_PROJECT_DIR/terraform/website"
+terraform init -backend=false -input=false >/dev/null
+tflint --init >/dev/null
 terraform fmt -check -recursive
 terraform validate
 tflint --recursive

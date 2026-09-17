@@ -40,10 +40,12 @@ backend override automatically (create, init, test, cleanup).
    terraform test -verbose -filter=tests/$ARGUMENTS.tftest.hcl
    ```
 
-5. **Always clean up**, even if tests fail:
+5. **Always clean up**, even if tests fail, and restore the declared S3
+   backend so later `plan`/`apply` runs do not fail on a backend change:
 
    ```bash
    rm -f backend_override.tf
+   terraform init -reconfigure -input=false
    ```
 
 6. Report results. If any test failed, show the failing assertions and
