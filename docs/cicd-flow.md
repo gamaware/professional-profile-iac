@@ -208,7 +208,7 @@ Before any commit, hooks validate the code locally:
 Every PR receives automated reviews from:
 
 - **CodeRabbit**: Path-specific instructions for Terraform, workflows,
-  modules, CLAUDE.md, and scripts
+  modules, and scripts
 - **GitHub Copilot**: Priorities include security, Terraform best practices,
   state management, cost awareness, and least privilege
 
