@@ -63,10 +63,6 @@ docs/
   github-oidc-setup.md            # OIDC authentication guide
   github-variables-setup.md       # GitHub variables guide
   prerequisites.md                # Setup prerequisites
-.claude/
-  settings.json                   # Claude Code hooks config
-  hooks/                          # Post-edit and protect hooks
-  skills/                         # /ship-it (local override), /tf-test, /validate
 .github/
   actions/                        # Composite actions (5)
   scripts/                        # Shell scripts (7)
