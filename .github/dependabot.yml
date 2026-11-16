@@ -11,6 +11,10 @@ updates:
     open-pull-requests-limit: 10
     cooldown:
       default-days: 7
+    groups:
+      github-actions-all:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   # Terraform
   - package-ecosystem: "terraform"
@@ -20,3 +24,7 @@ updates:
     open-pull-requests-limit: 10
     cooldown:
       default-days: 7
+    groups:
+      terraform-all:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
