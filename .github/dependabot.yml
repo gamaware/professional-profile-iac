@@ -13,8 +13,8 @@ updates:
       default-days: 7
     groups:
       github-actions-all:
-        group-by: dependency-name
         patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   # Terraform
   - package-ecosystem: "terraform"
@@ -27,3 +27,4 @@ updates:
     groups:
       terraform-all:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
